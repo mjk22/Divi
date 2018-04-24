@@ -64,18 +64,16 @@ private:
     // who we asked for the Masternode list and the last time
     std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
     // which Masternodes we've asked for
-    std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
+    std::map<CBitcoinAddress, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
     // Keep track of all broadcasts I've seen
-    map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+    map<uint256, CMasternode> mapSeenMasternodeBroadcast;
     // Keep track of all pings I've seen
     map<uint256, CMasternodePing> mapSeenMasternodePing;
 
     // keep track of dsq count to prevent masternodes from gaming obfuscation queue
     int64_t nDsqCount;
-
-    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
@@ -98,7 +96,7 @@ public:
     bool Add(CMasternode& mn);
 
     /// Ask (source) node for mnb
-    void AskForMN(CNode* pnode, CTxIn& vin);
+    void AskForMN(CNode* pnode, CBitcoinAddress& address);
 
     /// Check all Masternodes
     void Check();
@@ -116,12 +114,10 @@ public:
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
-    CMasternode* Find(const CScript& payee);
-    CMasternode* Find(const CTxIn& vin);
-    CMasternode* Find(const CPubKey& pubKeyMasternode);
+    CMasternode* Find(std::string& address);
 
     /// Find an entry in the masternode list that is next to be paid
-    CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
+    CMasternode* GetNextMasternodeInQueueForPaymentX(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
     CMasternode* FindRandomNotInVec(std::vector<CTxIn>& vecToExclude, int protocolVersion = -1);
@@ -151,10 +147,10 @@ public:
 
     std::string ToString() const;
 
-    void Remove(CTxIn vin);
+    void Remove(CBitcoinAddress address);
 
     /// Update masternode list and maps using provided CMasternodeBroadcast
-    void UpdateMasternodeList(CMasternodeBroadcast mnb);
+    void UpdateMasternodeListX(CMasternode mnb);
 };
 
 #endif

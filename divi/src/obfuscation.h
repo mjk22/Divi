@@ -162,7 +162,7 @@ public:
 class CObfuscationQueue
 {
 public:
-    CTxIn vin;
+	CPubKey pubKey;
     int64_t time;
     int nDenom;
     bool ready; //ready for submit
@@ -171,7 +171,7 @@ public:
     CObfuscationQueue()
     {
         nDenom = 0;
-        vin = CTxIn();
+        pubKey = CPubKey();
         time = 0;
         vchSig.clear();
         ready = false;
@@ -183,40 +183,12 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
         READWRITE(nDenom);
-        READWRITE(vin);
+        READWRITE(pubKey);
         READWRITE(time);
         READWRITE(ready);
         READWRITE(vchSig);
     }
 
-    bool GetAddress(CService& addr)
-    {
-        CMasternode* pmn = mnodeman.Find(vin);
-        if (pmn != NULL) {
-            addr = pmn->addr;
-            return true;
-        }
-        return false;
-    }
-
-    /// Get the protocol version
-    bool GetProtocolVersion(int& protocolVersion)
-    {
-        CMasternode* pmn = mnodeman.Find(vin);
-        if (pmn != NULL) {
-            protocolVersion = pmn->protocolVersion;
-            return true;
-        }
-        return false;
-    }
-
-    /** Sign this Obfuscation transaction
-     *  \return true if all conditions are met:
-     *     1) we have an active Masternode,
-     *     2) we have a valid Masternode private key,
-     *     3) we signed the message successfully, and
-     *     4) we verified the message successfully
-     */
     bool Sign();
 
     bool Relay();
@@ -237,7 +209,7 @@ class CObfuscationBroadcastTx
 {
 public:
     CTransaction tx;
-    CTxIn vin;
+    std::string address;
     vector<unsigned char> vchSig;
     int64_t sigTime;
 };
@@ -247,16 +219,8 @@ public:
 class CObfuScationSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 10000 DIV - checking if valid masternode)
-    bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
-    /// Set the private/public key values, returns true if successful
-    bool GetKeysFromSecret(std::string strSecret, CKey& keyRet, CPubKey& pubkeyRet);
-    /// Set the private/public key values, returns true if successful
-    bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
-    /// Sign the message, returns true if successful
-    bool SignMessage(std::string strMessage, std::string& errorMessage, std::vector<unsigned char>& vchSig, CKey key);
-    /// Verify the message, returns true if succcessful
-    bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
+	bool SignMessage(std::string address, std::string strMessage, vector<unsigned char>& vchSig);
+	bool VerifyMessage(std::string address, std::string strMessage, vector<unsigned char>& vchSig);
 };
 
 /** Used to keep track of current status of Obfuscation pool
